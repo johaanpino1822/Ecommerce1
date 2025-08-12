@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ExclamationCircleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -11,7 +12,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { user, login, error: authError, isAdmin } = useAuth();
 
-  // Mostrar errores del contexto
   useEffect(() => {
     if (authError) {
       setError(authError);
@@ -59,8 +59,6 @@ const LoginPage = () => {
 
       if (loginSuccess) {
         setSuccess(true);
-
-        // ✅ Redirección explícita tras login exitoso
         if (isAdmin) {
           navigate('/admin/dashboard');
         } else {
@@ -78,39 +76,58 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-[#0C4B45] to-[#062923] flex items-center justify-center p-4">
+      <motion.div 
+        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="text-center mb-8">
-          <div className="mx-auto bg-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+          <motion.div 
+            className="mx-auto bg-gradient-to-br from-[#662D8F] to-[#F2A9FD] w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg"
+            whileHover={{ scale: 1.05 }}
+          >
             <LockClosedIcon className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">Acceso Administrativo</h2>
-          <p className="mt-2 text-gray-600">
+          </motion.div>
+          <h2 className="text-3xl font-bold text-[#83F4E9] tracking-tight">ACCESO ADMINISTRATIVO</h2>
+          <p className="mt-2 text-[#B5EAD7] font-light">
             Solo personal autorizado
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <motion.div 
+          className="bg-[#0A2E38]/90 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden border border-[#83F4E9]/20"
+          whileHover={{ y: -5 }}
+        >
           <div className="px-6 py-8 sm:p-10">
             {success && (
-              <div className="mb-6 bg-green-50 rounded-lg py-3 px-4 flex items-center">
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <motion.div 
+                className="mb-6 bg-[#0C4B45] rounded-lg py-3 px-4 flex items-center border border-[#83F4E9]/30"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <svg className="h-5 w-5 text-[#83F4E9] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-green-700 font-medium">¡Autenticación exitosa! Redirigiendo...</span>
-              </div>
+                <span className="text-[#83F4E9] font-medium">¡Autenticación exitosa! Redirigiendo...</span>
+              </motion.div>
             )}
 
             {error && (
-              <div className="mb-6 bg-red-50 rounded-lg py-3 px-4 flex items-start">
-                <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                <span className="text-red-700">{error}</span>
-              </div>
+              <motion.div 
+                className="mb-6 bg-[#4B2280]/50 rounded-lg py-3 px-4 flex items-start border border-[#F2A9FD]/30"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <ExclamationCircleIcon className="h-5 w-5 text-[#F2A9FD] mr-2 mt-0.5 flex-shrink-0" />
+                <span className="text-[#F2A9FD]">{error}</span>
+              </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-[#83F4E9] mb-1">
                   Correo electrónico
                 </label>
                 <input
@@ -119,7 +136,7 @@ const LoginPage = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className={`w-full px-4 py-3 border ${error && error.includes('email') ? 'border-red-300' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 bg-[#0A2E38]/70 border ${error && error.includes('email') ? 'border-[#F2A9FD]' : 'border-[#83F4E9]/30'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2A9FD] focus:border-transparent text-white placeholder-[#83F4E9]/50`}
                   placeholder="admin@ejemplo.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -127,7 +144,7 @@ const LoginPage = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-[#83F4E9] mb-1">
                   Contraseña
                 </label>
                 <input
@@ -137,7 +154,7 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   required
                   minLength="6"
-                  className={`w-full px-4 py-3 border ${error && error.includes('contraseña') ? 'border-red-300' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 bg-[#0A2E38]/70 border ${error && error.includes('contraseña') ? 'border-[#F2A9FD]' : 'border-[#83F4E9]/30'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2A9FD] focus:border-transparent text-white placeholder-[#83F4E9]/50`}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
@@ -150,24 +167,26 @@ const LoginPage = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#F2A9FD] focus:ring-[#F2A9FD] border-[#83F4E9]/30 rounded bg-[#0A2E38]/70"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-[#83F4E9]">
                     Recuérdame
                   </label>
                 </div>
                 <div className="text-sm">
-                  <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  <Link to="/forgot-password" className="font-medium text-[#F2A9FD] hover:text-[#83F4E9] transition-colors">
                     ¿Contraseña olvidada?
                   </Link>
                 </div>
               </div>
 
               <div>
-                <button
+                <motion.button
                   type="submit"
                   disabled={loading}
-                  className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-base font-medium text-white bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] hover:from-[#512577] hover:to-[#e895fc] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F2A9FD] ${loading ? 'opacity-80 cursor-not-allowed' : ''}`}
+                  whileHover={!loading ? { scale: 1.02 } : {}}
+                  whileTap={!loading ? { scale: 0.98 } : {}}
                 >
                   {loading ? (
                     <>
@@ -177,31 +196,31 @@ const LoginPage = () => {
                       </svg>
                       Verificando...
                     </>
-                  ) : 'Acceder al sistema'}
-                </button>
+                  ) : 'ACCEDER AL SISTEMA'}
+                </motion.button>
               </div>
             </form>
           </div>
 
-          <div className="bg-gray-50 px-6 py-4 sm:px-10 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
+          <div className="bg-[#0A2E38]/80 px-6 py-4 sm:px-10 border-t border-[#83F4E9]/10">
+            <p className="text-xs text-[#83F4E9]/70 text-center">
               Al iniciar sesión, aceptas nuestro{' '}
-              <Link to="/terms" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/terms" className="font-medium text-[#F2A9FD] hover:text-[#83F4E9] transition-colors">
                 Acuerdo de confidencialidad
               </Link>
             </p>
           </div>
-        </div>
+        </motion.div>
 
         <div className="mt-6 text-center text-sm">
-          <p className="text-gray-600">
+          <p className="text-[#83F4E9]/80">
             ¿Problemas técnicos?{' '}
-            <Link to="/support" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/support" className="font-medium text-[#F2A9FD] hover:text-[#83F4E9] transition-colors">
               Contactar al soporte
             </Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

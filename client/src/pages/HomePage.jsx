@@ -7,6 +7,7 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
@@ -36,25 +37,29 @@ const HomePage = () => {
     fetchProducts();
   }, []);
 
-  // Componentes personalizados para flechas
+  // Componentes personalizados para flechas con la paleta de colores
   const NextArrow = ({ onClick }) => (
-    <button 
+    <motion.button 
       onClick={onClick}
-      className="absolute right-0 top-1/2 z-10 -translate-y-1/2 transform bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg hover:scale-110 transition-all duration-300"
+      className="absolute right-0 top-1/2 z-10 -translate-y-1/2 transform bg-[#83F4E9]/90 hover:bg-[#83F4E9] text-[#0C4B45] rounded-full p-2 shadow-lg"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
       aria-label="Siguiente"
     >
       <FiChevronRight size={24} />
-    </button>
+    </motion.button>
   );
 
   const PrevArrow = ({ onClick }) => (
-    <button 
+    <motion.button 
       onClick={onClick}
-      className="absolute left-0 top-1/2 z-10 -translate-y-1/2 transform bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg hover:scale-110 transition-all duration-300"
+      className="absolute left-0 top-1/2 z-10 -translate-y-1/2 transform bg-[#83F4E9]/90 hover:bg-[#83F4E9] text-[#0C4B45] rounded-full p-2 shadow-lg"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
       aria-label="Anterior"
     >
       <FiChevronLeft size={24} />
-    </button>
+    </motion.button>
   );
 
   // Configuración mejorada del carrusel
@@ -93,52 +98,119 @@ const HomePage = () => {
           arrows: false
         }
       }
-    ]
+    ],
+    appendDots: dots => (
+      <div className="bg-transparent rounded-lg p-2">
+        <ul className="flex justify-center space-x-2">{dots}</ul>
+      </div>
+    ),
+    customPaging: () => (
+      <div className="w-3 h-3 rounded-full bg-[#83F4E9]/50 hover:bg-[#0C4B45] transition-colors duration-300"></div>
+    )
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-pulse flex space-x-4">
-        <div className="rounded-full bg-gray-200 h-12 w-12"></div>
-      </div>
-    </div>
+    <motion.div 
+      className="flex justify-center items-center min-h-screen bg-gradient-to-b from-[#0C4B45]/10 to-white"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <motion.div
+        className="flex flex-col items-center"
+        animate={{
+          scale: [1, 1.1, 1],
+          rotate: [0, 5, -5, 0]
+        }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          repeatType: 'reverse'
+        }}
+      >
+        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] mb-4"></div>
+        <span className="text-[#0C4B45] font-medium">Cargando productos...</span>
+      </motion.div>
+    </motion.div>
   );
 
   if (error) return (
-    <div className="text-center py-20 text-red-500 text-xl">
-      Error al cargar productos: {error}
+    <div className="text-center py-20 bg-gradient-to-b from-[#0C4B45]/10 to-white">
+      <motion.div 
+        className="inline-block bg-white p-6 rounded-xl shadow-lg"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+      >
+        <h3 className="text-xl font-bold text-[#662D8F] mb-2">Error al cargar productos</h3>
+        <p className="text-[#0C4B45]">{error}</p>
+        <button 
+          className="mt-4 px-4 py-2 bg-[#662D8F] text-white rounded-lg hover:bg-[#512577] transition-colors"
+          onClick={() => window.location.reload()}
+        >
+          Reintentar
+        </button>
+      </motion.div>
     </div>
   );
 
   return (
-    <div className="home-page bg-gradient-to-b from-gray-50 to-white">
+    <div className="home-page bg-gradient-to-b from-[#83F4E9]/10 to-white">
       <HeroWelcome />
 
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-4 text-gray-900">
-          Nuestros <span className="text-indigo-600">Productos</span>
-        </h1>
-        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-          Descubre nuestra exclusiva colección cuidadosamente seleccionada
-        </p>
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl font-bold mb-4 text-[#0C4B45]">
+            Nuestros <span className="text-[#662D8F]">Productos</span>
+          </h1>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] mx-auto mb-4"></div>
+          <p className="text-[#0C4B45]/80 max-w-2xl mx-auto">
+            Descubre nuestra exclusiva colección cuidadosamente seleccionada
+          </p>
+        </motion.div>
 
-        <div className="relative group">
+        <motion.div 
+          className="relative group"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+        >
           {products.length > 0 ? (
             <Slider {...sliderSettings} className="px-2">
               {products.map((product) => (
-                <div key={product._id} className="px-3 py-6 transform transition-all duration-500 hover:scale-105">
-                  <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full">
+                <div key={product._id} className="px-3 py-6">
+                  <motion.div 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden h-full border border-[#83F4E9]/20"
+                    whileHover={{ 
+                      y: -10,
+                      boxShadow: "0 20px 25px -5px rgba(102, 45, 143, 0.1), 0 10px 10px -5px rgba(102, 45, 143, 0.04)"
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
                     <ProductCard product={product} />
-                  </div>
+                  </motion.div>
                 </div>
               ))}
             </Slider>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No hay productos disponibles</p>
-            </div>
+            <motion.div 
+              className="text-center py-12 bg-white rounded-xl shadow-sm max-w-md mx-auto"
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+            >
+              <p className="text-[#0C4B45]/70 text-lg">No hay productos disponibles</p>
+              <button 
+                className="mt-4 px-4 py-2 bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] text-white rounded-lg hover:opacity-90 transition-opacity"
+                onClick={() => window.location.reload()}
+              >
+                Recargar
+              </button>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </section>
 
       <Footer />
