@@ -65,7 +65,7 @@ const HeroWelcome = () => {
               }}
               whileHover={{ scale: 1.02 }}
             >
-              PC<span className="font-bold" style={{ fontWeight: 700 }}>VÁZQUEZ</span>
+              PC<span className="font-bold" style={{ fontWeight: 700 }}>VASQUEZ</span>
             </motion.h1>
             
             <motion.div 

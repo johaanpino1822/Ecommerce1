@@ -42,14 +42,19 @@ const CartPage = () => {
   const [paymentToken, setPaymentToken] = useState('tok_test_4242424242424242');
   const [acceptanceToken, setAcceptanceToken] = useState('');
 
-  // Función corregida para generar la firma de integridad
+  // Función para manejar las URLs de imagen
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '/placeholder-product.jpg';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/products/${imagePath}`;
+  };
+
   const generateIntegritySignature = (reference, amount, currency) => {
     const secretKey = process.env.REACT_APP_WOMPI_INTEGRITY_SECRET || 'prueba_integridad';
     const data = `${reference}${amount}${currency}${secretKey}`;
     return crypto.createHash('sha256').update(data).digest('hex');
   };
 
-  // Obtener acceptance token al montar el componente
   useEffect(() => {
     const fetchAcceptanceToken = async () => {
       try {
@@ -73,7 +78,6 @@ const CartPage = () => {
     fetchAcceptanceToken();
   }, []);
 
-  // Actualizar info de envío si el usuario está autenticado
   useEffect(() => {
     if (isAuthenticated && user) {
       const userShippingInfo = {
@@ -203,22 +207,14 @@ const CartPage = () => {
         redirect_url: `${window.location.origin}/order/${orderId}`,
         customer_data: {
           full_name: shippingInfo.name.trim(),
-          phone_number: formattedPhone, // Asegurar solo números sin código de país
+          phone_number: formattedPhone,
           email: shippingInfo.email.trim().toLowerCase(),
           legal_id_type: shippingInfo.legalIdType || 'CC',
           legal_id: shippingInfo.legalId.toString()
         },
         acceptance_token: acceptanceToken,
-        signature: generateIntegritySignature(reference, amountInCents, 'COP') // Firma correctamente generada
+        signature: generateIntegritySignature(reference, amountInCents, 'COP')
       };
-
-      console.log('Enviando a Wompi:', {
-        ...payload,
-        payment_method: {
-          ...payload.payment_method,
-          token: '***REDACTED***'
-        }
-      });
 
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wompi/create-transaction`,
@@ -238,12 +234,7 @@ const CartPage = () => {
       
       return response.data;
     } catch (error) {
-      console.error('Error en pago Wompi:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
+      console.error('Error en pago Wompi:', error);
       let errorMessage = 'Error al procesar el pago';
       if (error.response?.data?.details) {
         errorMessage += `: ${error.response.data.details.join(', ')}`;
@@ -408,10 +399,13 @@ const CartPage = () => {
                   <li key={item._id} className="p-4 flex flex-col sm:flex-row">
                     <div className="flex-shrink-0">
                       <img
-                        src={item.image || '/placeholder-product.jpg'}
+                        src={getImageUrl(item.image)}
                         alt={item.name}
                         className="h-24 w-24 object-cover rounded"
-                        onError={(e) => e.target.src = '/placeholder-product.jpg'}
+                        onError={(e) => {
+                          e.target.src = '/placeholder-product.jpg';
+                          e.target.onerror = null;
+                        }}
                       />
                     </div>
                     <div className="ml-4 flex-1">

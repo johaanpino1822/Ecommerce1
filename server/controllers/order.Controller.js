@@ -269,6 +269,53 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// Obtener una orden por ID con verificación de propiedad
+const getOrderById = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID de orden no válido',
+        code: 'INVALID_ORDER_ID'
+      });
+    }
+
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('items.product', 'name price image');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: 'Orden no encontrada',
+        code: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Verificar que el usuario sea el dueño de la orden
+    if (order.user._id.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'No autorizado para acceder a esta orden',
+        code: 'UNAUTHORIZED_ACCESS'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: order
+    });
+
+  } catch (error) {
+    console.error('Error al obtener orden:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener la orden',
+      code: 'FETCH_ORDER_ERROR'
+    });
+  }
+};
+
 // Webhook Wompi mejorado
 const handleWompiWebhook = async (req, res) => {
   const session = await mongoose.startSession();
@@ -366,5 +413,6 @@ const handleWompiWebhook = async (req, res) => {
 module.exports = {
   createOrder,
   getAllOrders,
+  getOrderById,
   handleWompiWebhook
 };

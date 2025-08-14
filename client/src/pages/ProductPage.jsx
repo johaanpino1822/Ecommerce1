@@ -3,7 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FaShoppingCart, FaHeart, FaRegHeart, FaStar, FaChevronLeft, FaChevronRight, FaCheck, FaShare, FaExpand ,   FaMinus,  FaPlus  } from 'react-icons/fa';
+import { 
+  FaShoppingCart, 
+  FaHeart, 
+  FaRegHeart, 
+  FaStar, 
+  FaChevronLeft, 
+  FaChevronRight, 
+  FaCheck, 
+  FaShare, 
+  FaExpand,
+  FaMinus, 
+  FaPlus 
+} from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 
@@ -19,6 +31,20 @@ const ProductPage = () => {
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Paleta de colores premium
+  const colors = {
+    primary: '#0C4B45',
+    primaryLight: '#83F4E9',
+    primaryDark: '#083D38',
+    secondary: '#662D8F',
+    secondaryLight: '#F2A9FD',
+    accent: '#4CAF50',
+    textDark: '#0C4B45',
+    textLight: '#E0F3EB',
+    background: '#F0F9F5'
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -44,36 +70,45 @@ const ProductPage = () => {
     fetchProduct();
   }, [id, navigate]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || quantity < 1) return;
 
-    addToCart({
-      ...product,
-      selectedColor,
-      selectedSize
-    }, quantity);
+    setIsAddingToCart(true);
+    
+    try {
+      addToCart({
+        ...product,
+        selectedColor,
+        selectedSize
+      }, quantity);
 
-    toast.success(
-      <div>
-        <p className="font-medium">{product.name}</p>
-        <p className="text-sm">Agregado al carrito</p>
-      </div>, 
-      {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        className: "bg-white border-l-4 border-[#662D8F] shadow-lg"
-      }
-    );
+      toast.success(
+        <div className="flex items-start">
+          <div className="bg-[#83F4E9] p-2 rounded-lg mr-3">
+            <FaCheck className="text-[#0C4B45] text-xl" />
+          </div>
+          <div>
+            <p className="font-medium text-gray-800">{product.name}</p>
+            <p className="text-sm text-gray-600">Agregado al carrito</p>
+          </div>
+        </div>, 
+        {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: true,
+          closeButton: false,
+          className: "bg-white border-l-4 border-[#662D8F] shadow-xl rounded-lg"
+        }
+      );
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleQuantityChange = (value) => {
     const newQuantity = parseInt(value);
-    if (!isNaN(newQuantity)){
-      if (newQuantity >= 1 && newQuantity <= (product?.stock || 10)) {
-        setQuantity(newQuantity);
-      }
+    if (!isNaN(newQuantity) && newQuantity >= 1 && newQuantity <= (product?.stock || 10)) {
+      setQuantity(newQuantity);
     }
   };
 
@@ -109,15 +144,15 @@ const ProductPage = () => {
     return (
       <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#0C4B45]/5 to-[#83F4E9]/5">
         <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="animate-pulse bg-white rounded-3xl shadow-xl overflow-hidden">
             <div className="md:flex">
-              <div className="md:w-1/2 h-96 bg-gray-200"></div>
-              <div className="p-8 md:w-1/2 space-y-6">
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-24 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-12 bg-gray-200 rounded w-full"></div>
+              <div className="md:w-1/2 h-[500px] bg-gray-100 rounded-l-3xl"></div>
+              <div className="p-10 md:w-1/2 space-y-6">
+                <div className="h-10 bg-gray-100 rounded-full w-3/4"></div>
+                <div className="h-6 bg-gray-100 rounded-full w-1/2"></div>
+                <div className="h-32 bg-gray-100 rounded-2xl"></div>
+                <div className="h-14 bg-gray-100 rounded-full w-1/3"></div>
+                <div className="h-16 bg-gray-100 rounded-full w-full"></div>
               </div>
             </div>
           </div>
@@ -129,14 +164,17 @@ const ProductPage = () => {
   if (!product) {
     return (
       <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center bg-gradient-to-b from-[#0C4B45]/5 to-[#83F4E9]/5">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#0C4B45]">Producto no encontrado</h2>
-          <button 
+        <div className="text-center max-w-md p-8 bg-white rounded-3xl shadow-xl">
+          <h2 className="text-3xl font-bold text-[#0C4B45] mb-4">Producto no encontrado</h2>
+          <p className="text-gray-600 mb-6">Lo sentimos, no pudimos encontrar el producto que buscas.</p>
+          <motion.button 
             onClick={() => navigate('/')}
-            className="mt-4 px-6 py-2 bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] text-white rounded-lg hover:from-[#512577] hover:to-[#e895fc] transition-all"
+            className="w-full py-3 px-6 bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] text-white rounded-xl font-medium hover:from-[#512577] hover:to-[#e895fc] transition-all"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Volver a la tienda
-          </button>
+          </motion.button>
         </div>
       </div>
     );
@@ -144,7 +182,7 @@ const ProductPage = () => {
 
   const images = [
     product.image ? getImageUrl(product.image) : '/placeholder.jpg',
-    ...(product.additionalImages?.map(img => getImageUrl(img)))|| []
+    ...(product.additionalImages?.map(img => getImageUrl(img))) || []
   ];
 
   const mainImage = images[selectedImage] || '/placeholder.jpg';
@@ -156,53 +194,62 @@ const ProductPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden"
+          className="bg-white rounded-3xl shadow-xl overflow-hidden"
         >
           <div className="md:flex">
             {/* Gallery Section */}
             <div className="md:w-1/2 relative">
-              <div className="relative h-96 md:h-full bg-gradient-to-br from-[#0C4B45]/10 to-[#83F4E9]/10 flex items-center justify-center p-8">
-                <img
+              <div className="relative h-[500px] bg-gradient-to-br from-[#0C4B45]/10 to-[#83F4E9]/10 flex items-center justify-center p-10">
+                <motion.img
                   src={mainImage}
                   alt={product.name}
                   className="max-h-full max-w-full object-contain cursor-zoom-in"
                   onClick={() => setShowFullscreenImage(true)}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
                 />
                 
                 {/* Image Navigation */}
                 {images.length > 1 && (
                   <>
-                    <button 
+                    <motion.button 
                       onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-md z-10"
+                      className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <FaChevronLeft className="text-[#662D8F]" />
-                    </button>
-                    <button 
+                      <FaChevronLeft className="text-[#662D8F] text-lg" />
+                    </motion.button>
+                    <motion.button 
                       onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-md z-10"
+                      className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <FaChevronRight className="text-[#662D8F]" />
-                    </button>
+                      <FaChevronRight className="text-[#662D8F] text-lg" />
+                    </motion.button>
                   </>
                 )}
                 
                 {/* Fullscreen Button */}
-                <button
+                <motion.button
                   onClick={(e) => { e.stopPropagation(); setShowFullscreenImage(true); }}
-                  className="absolute bottom-4 right-4 bg-white/80 hover:bg-white p-2 rounded-full shadow-md z-10"
+                  className="absolute bottom-6 right-6 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg z-10"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  <FaExpand className="text-[#662D8F]" />
-                </button>
+                  <FaExpand className="text-[#662D8F] text-lg" />
+                </motion.button>
                 
                 {/* Image Indicators */}
                 {images.length > 1 && (
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                  <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-2">
                     {images.map((_, index) => (
-                      <button 
+                      <motion.button 
                         key={index}
                         onClick={(e) => { e.stopPropagation(); setSelectedImage(index); }}
                         className={`w-3 h-3 rounded-full transition-all ${selectedImage === index ? 'bg-[#662D8F] scale-125' : 'bg-gray-300 hover:bg-[#F2A9FD]'}`}
+                        whileHover={{ scale: 1.2 }}
                       />
                     ))}
                   </div>
@@ -211,83 +258,96 @@ const ProductPage = () => {
               
               {/* Thumbnails */}
               {images.length > 1 && (
-                <div className="p-4 flex space-x-2 overflow-x-auto">
+                <div className="p-6 flex space-x-4 overflow-x-auto">
                   {images.map((img, index) => (
-                    <button
+                    <motion.button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden ${selectedImage === index ? 'border-[#662D8F]' : 'border-transparent'}`}
+                      className={`flex-shrink-0 w-20 h-20 border-2 rounded-xl overflow-hidden transition-all ${selectedImage === index ? 'border-[#662D8F] shadow-md' : 'border-transparent hover:border-gray-200'}`}
+                      whileHover={{ y: -3 }}
                     >
                       <img 
                         src={img} 
                         alt={`Miniatura ${index + 1}`}
                         className="w-full h-full object-cover bg-gray-50"
                       />
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
             </div>
             
             {/* Product Info Section */}
-            <div className="p-8 md:w-1/2">
-              <div className="flex justify-between items-start">
+            <div className="p-10 md:w-1/2">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-[#0C4B45] mb-2">{product.name}</h1>
-                  <div className="flex items-center mb-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <FaStar 
-                        key={star} 
-                        className={`text-lg ${star <= (product.rating || 0) ? 'text-[#F2A9FD]' : 'text-gray-300'}`} 
-                      />
-                    ))}
-                    <span className="text-sm text-gray-500 ml-2">({product.reviewCount || 0} reseñas)</span>
+                  <h1 className="text-4xl font-bold text-[#0C4B45] mb-3">{product.name}</h1>
+                  <div className="flex items-center mb-5">
+                    <div className="flex mr-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar 
+                          key={star} 
+                          className={`text-xl ${star <= (product.rating || 0) ? 'text-[#F2A9FD]' : 'text-gray-300'}`} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">({product.reviewCount || 0} reseñas)</span>
                   </div>
                 </div>
                 
-                <button 
+                <motion.button 
                   onClick={() => setIsFavorite(!isFavorite)}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   {isFavorite ? (
                     <FaHeart className="text-2xl text-[#F2A9FD]" />
                   ) : (
                     <FaRegHeart className="text-2xl text-gray-400 hover:text-[#F2A9FD]" />
                   )}
-                </button>
+                </motion.button>
               </div>
               
-              <div className="mb-6">
-                <span className="font-bold text-3xl text-[#662D8F]">
-                  ${product.price?.toLocaleString() || '0.00'}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-lg text-gray-400 line-through ml-3">
-                    ${product.originalPrice.toLocaleString()}
+              <div className="mb-8">
+                <div className="flex items-end">
+                  <span className="font-bold text-4xl text-[#662D8F]">
+                    ${product.price?.toLocaleString() || '0.00'}
                   </span>
-                )}
+                  {product.originalPrice && product.price < product.originalPrice && (
+                    <span className="text-xl text-gray-400 line-through ml-4">
+                      ${product.originalPrice.toLocaleString()}
+                    </span>
+                  )}
+                </div>
                 {product.discount > 0 && (
-                  <span className="ml-3 bg-[#F2A9FD]/20 text-[#662D8F] text-sm font-bold px-2 py-1 rounded-full">
+                  <span className="inline-block mt-2 bg-[#F2A9FD]/20 text-[#662D8F] text-sm font-bold px-3 py-1 rounded-full">
                     {product.discount}% OFF
                   </span>
                 )}
               </div>
               
-              <p className="text-gray-700 mb-8">{product.description}</p>
+              <p className="text-gray-700 text-lg mb-8 leading-relaxed">{product.description}</p>
               
               {/* Color Selection */}
               {product.colors?.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Color:</h3>
-                  <div className="flex space-x-2">
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-[#0C4B45] mb-3">Color:</h3>
+                  <div className="flex flex-wrap gap-3">
                     {product.colors.map((color) => (
-                      <button
+                      <motion.button
                         key={color}
                         onClick={() => setSelectedColor(color)}
-                        className={`w-10 h-10 rounded-full border-2 ${selectedColor === color ? 'border-[#662D8F]' : 'border-transparent'}`}
+                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${selectedColor === color ? 'border-[#662D8F]' : 'border-transparent'}`}
                         style={{ backgroundColor: color }}
                         aria-label={`Color ${color}`}
-                      />
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {selectedColor === color && (
+                          <FaCheck className="text-white text-xs drop-shadow-md" />
+                        )}
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -295,82 +355,95 @@ const ProductPage = () => {
               
               {/* Size Selection */}
               {product.sizes?.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Talla:</h3>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-[#0C4B45] mb-3">Talla:</h3>
+                  <div className="flex flex-wrap gap-3">
                     {product.sizes.map((size) => (
-                      <button
+                      <motion.button
                         key={size}
                         onClick={() => setSelectedSize(size)}
-                        className={`px-4 py-2 border rounded-md text-sm font-medium ${selectedSize === size ? 'bg-[#662D8F] text-white border-[#662D8F]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                        className={`px-5 py-2 border-2 rounded-lg text-md font-medium ${selectedSize === size ? 'bg-[#662D8F] text-white border-[#662D8F]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                        whileHover={{ y: -2 }}
                       >
                         {size}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
               )}
               
               {/* Stock Indicator */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm mb-1">
+              <div className="mb-8">
+                <div className="flex justify-between text-md mb-2">
                   <span className="text-gray-700">Disponibilidad:</span>
                   <span className={`font-medium ${product.stock > 5 ? 'text-[#0C4B45]' : 'text-[#662D8F]'}`}>
                     {product.stock} en stock
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-full rounded-full ${product.stock > 5 ? 'bg-[#83F4E9]' : 'bg-[#F2A9FD]'}`} 
-                    style={{ width: `${Math.min(100, (product.stock / 10) * 100)}%` }}
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <motion.div 
+                    className={`h-full rounded-full ${product.stock > 5 ? 'bg-[#83F4E9]' : 'bg-[#F2A9FD]'}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, (product.stock / 10) * 100)}%` }}
+                    transition={{ duration: 0.8, type: 'spring' }}
                   />
                 </div>
               </div>
               
               {/* Quantity and Add to Cart */}
-              <div className="mb-8">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center border rounded-lg overflow-hidden">
-                    <button 
+              <div className="mb-10">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                    <motion.button 
                       onClick={decrementQuantity}
-                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600"
+                      className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                      whileTap={{ scale: 0.95 }}
                     >
-                      <FaMinus className="text-sm" />
-                    </button>
+                      <FaMinus className="text-md" />
+                    </motion.button>
                     <input
                       type="number"
                       min="1"
                       max={product.stock}
                       value={quantity}
                       onChange={(e) => handleQuantityChange(e.target.value)}
-                      className="w-16 text-center border-t-0 border-b-0 focus:ring-0 focus:border-gray-300"
+                      className="w-16 text-center border-t-0 border-b-0 focus:ring-0 focus:border-gray-300 text-lg font-medium"
                     />
-                    <button 
+                    <motion.button 
                       onClick={incrementQuantity}
-                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600"
+                      className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                      whileTap={{ scale: 0.95 }}
                     >
-                      <FaPlus className="text-sm" />
-                    </button>
+                      <FaPlus className="text-md" />
+                    </motion.button>
                   </div>
                   
                   <motion.button
                     onClick={handleAddToCart}
-                    disabled={isInCart}
-                    className={`flex-1 py-3 rounded-lg flex items-center justify-center transition-colors ${
+                    disabled={isInCart || isAddingToCart}
+                    className={`flex-1 py-4 rounded-xl flex items-center justify-center transition-all duration-300 relative overflow-hidden ${
                       isInCart 
-                        ? 'bg-[#83F4E9]/30 text-[#0C4B45] cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] hover:from-[#512577] hover:to-[#e895fc] text-white'
+                        ? 'bg-[#83F4E9] text-[#0C4B45]' 
+                        : 'bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] text-white hover:from-[#512577] hover:to-[#e895fc]'
                     }`}
-                    whileHover={!isInCart ? { scale: 1.02 } : {}}
+                    whileHover={!isInCart ? { 
+                      scale: 1.02,
+                      boxShadow: '0 5px 15px rgba(102, 45, 143, 0.3)'
+                    } : {}}
                     whileTap={!isInCart ? { scale: 0.98 } : {}}
                   >
-                    {isInCart ? (
+                    {isAddingToCart ? (
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Procesando...
+                      </div>
+                    ) : isInCart ? (
                       <>
-                        <FaCheck className="mr-2" /> En el carrito
+                        <FaCheck className="mr-3 text-xl" /> En el carrito
                       </>
                     ) : (
                       <>
-                        <FaShoppingCart className="mr-2" /> Agregar al carrito
+                        <FaShoppingCart className="mr-3 text-xl" /> Agregar al carrito
                       </>
                     )}
                   </motion.button>
@@ -378,8 +451,8 @@ const ProductPage = () => {
               </div>
               
               {/* Additional Info */}
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="border-t pt-6">
+                <div className="grid grid-cols-2 gap-4 text-md">
                   <div>
                     <span className="text-gray-500">Categoría:</span>
                     <span className="ml-2 font-medium text-[#0C4B45]">{product.category}</span>
@@ -400,10 +473,13 @@ const ProductPage = () => {
               </div>
               
               {/* Share Buttons */}
-              <div className="mt-6 flex space-x-4">
-                <button className="flex items-center text-sm text-gray-500 hover:text-[#662D8F]">
-                  <FaShare className="mr-2" /> Compartir
-                </button>
+              <div className="mt-8">
+                <motion.button 
+                  className="flex items-center text-md text-gray-500 hover:text-[#662D8F]"
+                  whileHover={{ x: 3 }}
+                >
+                  <FaShare className="mr-3 text-lg" /> Compartir este producto
+                </motion.button>
               </div>
             </div>
           </div>
@@ -414,52 +490,60 @@ const ProductPage = () => {
       <AnimatePresence>
         {showFullscreenImage && (
           <motion.div 
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div 
               className="relative max-w-6xl w-full max-h-[90vh]"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25 }}
             >
-              <button
+              <motion.button
                 onClick={() => setShowFullscreenImage(false)}
-                className="absolute top-4 right-4 text-white text-3xl z-10 hover:text-[#F2A9FD]"
+                className="absolute top-6 right-6 text-white text-4xl z-10 hover:text-[#F2A9FD] transition-colors"
+                whileHover={{ rotate: 90, scale: 1.1 }}
               >
                 &times;
-              </button>
+              </motion.button>
               
               <div className="relative h-full w-full flex items-center justify-center">
-                <img
+                <motion.img
                   src={mainImage}
                   alt={product.name}
                   className="max-h-full max-w-full object-contain"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
                 />
                 
                 {images.length > 1 && (
                   <>
-                    <button 
+                    <motion.button 
                       onClick={prevImage}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 p-3 rounded-full text-white"
+                      className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 p-4 rounded-full text-white text-xl"
+                      whileHover={{ scale: 1.1 }}
                     >
-                      <FaChevronLeft className="text-xl" />
-                    </button>
-                    <button 
+                      <FaChevronLeft />
+                    </motion.button>
+                    <motion.button 
                       onClick={nextImage}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 p-3 rounded-full text-white"
+                      className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 p-4 rounded-full text-white text-xl"
+                      whileHover={{ scale: 1.1 }}
                     >
-                      <FaChevronRight className="text-xl" />
-                    </button>
+                      <FaChevronRight />
+                    </motion.button>
                     
-                    <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-2">
+                    <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-3">
                       {images.map((_, index) => (
-                        <button 
+                        <motion.button 
                           key={index}
                           onClick={() => setSelectedImage(index)}
                           className={`w-3 h-3 rounded-full transition-all ${selectedImage === index ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/70'}`}
+                          whileHover={{ scale: 1.2 }}
                         />
                       ))}
                     </div>

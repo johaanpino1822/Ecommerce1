@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import ProductCard from '../components/ProductCard';
 import HeroWelcome from "../components/HeroWelcome";
 import Footer from "../components/Footer";
@@ -13,60 +13,73 @@ const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sliderReady, setSliderReady] = useState(false);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await api.get('/products');
-        const data = res.data;
+  // Función para obtener productos con manejo de errores
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const res = await api.get('/products');
+      const data = res.data;
 
-        if (Array.isArray(data.data)) {
-          setProducts(data.data);
-        } else {
-          console.error('Respuesta inesperada del servidor:', data);
-          setProducts([]);
-        }
-      } catch (err) {
-        setError(err.message);
-        setProducts([]);
-      } finally {
-        setLoading(false);
+      if (!data || !Array.isArray(data.data)) {
+        throw new Error('Formato de datos inválido');
       }
-    };
 
-    fetchProducts();
+      setProducts(data.data);
+    } catch (err) {
+      console.error('Error al obtener productos:', err);
+      setError(err.message || 'Error al cargar productos');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+      // Pequeño retraso para asegurar que el DOM esté listo
+      setTimeout(() => setSliderReady(true), 100);
+    }
   }, []);
 
-  // Componentes personalizados para flechas con la paleta de colores
-  const NextArrow = ({ onClick }) => (
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Componentes personalizados para flechas con mejor accesibilidad
+  const NextArrow = React.memo(({ onClick, currentSlide, slideCount }) => (
     <motion.button 
       onClick={onClick}
-      className="absolute right-0 top-1/2 z-10 -translate-y-1/2 transform bg-[#83F4E9]/90 hover:bg-[#83F4E9] text-[#0C4B45] rounded-full p-2 shadow-lg"
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      aria-label="Siguiente"
+      disabled={currentSlide === slideCount - 1}
+      className={`absolute right-0 top-1/2 z-10 -translate-y-1/2 transform bg-[#83F4E9]/90 hover:bg-[#83F4E9] text-[#0C4B45] rounded-full p-2 shadow-lg ${
+        currentSlide === slideCount - 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      }`}
+      whileHover={{ scale: currentSlide !== slideCount - 1 ? 1.1 : 1 }}
+      whileTap={{ scale: currentSlide !== slideCount - 1 ? 0.9 : 1 }}
+      aria-label="Siguiente producto"
     >
       <FiChevronRight size={24} />
     </motion.button>
-  );
+  ));
 
-  const PrevArrow = ({ onClick }) => (
+  const PrevArrow = React.memo(({ onClick, currentSlide }) => (
     <motion.button 
       onClick={onClick}
-      className="absolute left-0 top-1/2 z-10 -translate-y-1/2 transform bg-[#83F4E9]/90 hover:bg-[#83F4E9] text-[#0C4B45] rounded-full p-2 shadow-lg"
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      aria-label="Anterior"
+      disabled={currentSlide === 0}
+      className={`absolute left-0 top-1/2 z-10 -translate-y-1/2 transform bg-[#83F4E9]/90 hover:bg-[#83F4E9] text-[#0C4B45] rounded-full p-2 shadow-lg ${
+        currentSlide === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      }`}
+      whileHover={{ scale: currentSlide !== 0 ? 1.1 : 1 }}
+      whileTap={{ scale: currentSlide !== 0 ? 0.9 : 1 }}
+      aria-label="Producto anterior"
     >
       <FiChevronLeft size={24} />
     </motion.button>
-  );
+  ));
 
-  // Configuración mejorada del carrusel
+  // Configuración optimizada del carrusel
   const sliderSettings = {
     dots: true,
-    infinite: true,
-    speed: 1000,
+    infinite: false, // Cambiado a false para mejor UX en bordes
+    speed: 600, // Velocidad reducida para mejor percepción
     autoplay: true,
     autoplaySpeed: 5000,
     cssEase: "cubic-bezier(0.645, 0.045, 0.355, 1)",
@@ -75,6 +88,10 @@ const HomePage = () => {
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
     pauseOnHover: true,
+    pauseOnFocus: true,
+    pauseOnDotsHover: true,
+    initialSlide: 0,
+    lazyLoad: 'ondemand',
     responsive: [
       {
         breakpoint: 1280,
@@ -87,7 +104,17 @@ const HomePage = () => {
         breakpoint: 1024,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 1
+          slidesToScroll: 1,
+          dots: true
+        }
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          arrows: false,
+          dots: true
         }
       },
       {
@@ -95,7 +122,8 @@ const HomePage = () => {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
-          arrows: false
+          arrows: false,
+          dots: true
         }
       }
     ],
@@ -104,8 +132,11 @@ const HomePage = () => {
         <ul className="flex justify-center space-x-2">{dots}</ul>
       </div>
     ),
-    customPaging: () => (
-      <div className="w-3 h-3 rounded-full bg-[#83F4E9]/50 hover:bg-[#0C4B45] transition-colors duration-300"></div>
+    customPaging: i => (
+      <div 
+        className="w-3 h-3 rounded-full bg-[#83F4E9]/50 hover:bg-[#0C4B45] transition-colors duration-300"
+        aria-label={`Ir al producto ${i + 1}`}
+      />
     )
   };
 
@@ -144,7 +175,8 @@ const HomePage = () => {
         <p className="text-[#0C4B45]">{error}</p>
         <button 
           className="mt-4 px-4 py-2 bg-[#662D8F] text-white rounded-lg hover:bg-[#512577] transition-colors"
-          onClick={() => window.location.reload()}
+          onClick={fetchProducts}
+          aria-label="Reintentar carga de productos"
         >
           Reintentar
         </button>
@@ -179,22 +211,28 @@ const HomePage = () => {
           transition={{ delay: 0.3, duration: 0.8 }}
         >
           {products.length > 0 ? (
-            <Slider {...sliderSettings} className="px-2">
-              {products.map((product) => (
-                <div key={product._id} className="px-3 py-6">
-                  <motion.div 
-                    className="bg-white rounded-xl shadow-lg overflow-hidden h-full border border-[#83F4E9]/20"
-                    whileHover={{ 
-                      y: -10,
-                      boxShadow: "0 20px 25px -5px rgba(102, 45, 143, 0.1), 0 10px 10px -5px rgba(102, 45, 143, 0.04)"
-                    }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                </div>
-              ))}
-            </Slider>
+            <div className="relative">
+              {sliderReady && (
+                <Slider {...sliderSettings} className="px-2">
+                  {products.map((product) => (
+                    <div key={product._id} className="px-3 py-6 focus:outline-none">
+                      <motion.div 
+                        className="bg-white rounded-xl shadow-lg overflow-hidden h-full border border-[#83F4E9]/20"
+                        whileHover={{ 
+                          y: -10,
+                          boxShadow: "0 20px 25px -5px rgba(102, 45, 143, 0.1), 0 10px 10px -5px rgba(102, 45, 143, 0.04)"
+                        }}
+                        transition={{ duration: 0.3 }}
+                        tabIndex="0"
+                        aria-label={`Producto: ${product.name}`}
+                      >
+                        <ProductCard product={product} />
+                      </motion.div>
+                    </div>
+                  ))}
+                </Slider>
+              )}
+            </div>
           ) : (
             <motion.div 
               className="text-center py-12 bg-white rounded-xl shadow-sm max-w-md mx-auto"
@@ -204,7 +242,8 @@ const HomePage = () => {
               <p className="text-[#0C4B45]/70 text-lg">No hay productos disponibles</p>
               <button 
                 className="mt-4 px-4 py-2 bg-gradient-to-r from-[#662D8F] to-[#F2A9FD] text-white rounded-lg hover:opacity-90 transition-opacity"
-                onClick={() => window.location.reload()}
+                onClick={fetchProducts}
+                aria-label="Recargar productos"
               >
                 Recargar
               </button>
@@ -218,4 +257,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default React.memo(HomePage);
